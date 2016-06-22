@@ -28,7 +28,7 @@
 (defn checkbox []
   [:div
    [:input {:type "checkbox"
-            :checked false
+            ;;:checked true
             }]
    " "
    ])
@@ -68,6 +68,23 @@
        ])
     ))
 
+(defn footer []
+  (let []
+    (fn []
+      [:div
+       [:span
+        [:input {:type "button"
+                 :value "all"}]] " "
+       [:span
+        [:input {:type "button"
+                 :value "active"}]] " "
+       [:span
+        [:input {:type "button"
+                 :value "completed"}]] " "
+       [:span
+        [:input {:type "button"
+                 :value "clear-completed"}]] " "]
+      )))
 
 (defn todo-app []
   [:div
@@ -76,7 +93,9 @@
    [:div
     [todo-input]]
    [:div
-    [todos-list]]])
+    [todos-list]]
+   [:div
+    [footer]]])
 
 (defn init []
   (reagent/render [todo-app] (.getElementById js/document "my-app-area")))
