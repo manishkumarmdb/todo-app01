@@ -5,39 +5,30 @@
 
 (enable-console-print!)
 
+(enable-console-print!)
+
 (defn header []
   [:div.page-header
    [:h3 "ToDo Application"]])
 
-(def todos (reagent/atom (sorted-map)))
+(def todos (reagent/atom []))
 
 (def input-id (reagent/atom 1))
 
 (def counter (reagent/atom 0))
 
-(def todo-text (reagent/atom nil))
+(def todo-temp (reagent/atom ""))
 
-(defn add-in-todo [task]
-  (todos :id (swap! counter inc)
-         :task task))
-
-(defn todo-input []
-  (let [default-string ""
-        title (reagent/atom default-string)]
-    [:div
-     [:input {:type "text"
-              :value @title
-              :placeholder "add todo...."
-              :on-change #(reset! title (-> .target .-value))
-              }]
-     " "
-     [:input {:type "button"
-              :value "add"
-              :on-click #(reset! todo-text (swap! todos conj (add-in-todo @title))) (cons title (sorted-map (swap! input-id inc) title))}]]))
+(defn add-in-todo [text]
+  (let [id (swap! counter inc)]
+    (sorted-map :id id
+                :todo text
+                :status true)))
 
 (defn checkbox []
   [:div
    [:input {:type "checkbox"
+            :checked false
             }]
    " "
    ])
@@ -46,29 +37,46 @@
   [:div
    [:input {:type "button"
             :value "remove"
+            ;;:on-click #(remove key map....)
             }]])
 
-(defn todo-list []
-  )
+(defn todos-list []
+  [:div
+   [:table
+    (for [id @todos]
+      ^{:key id}
+      [:tr
+       [:td
+        [checkbox]]
+       [:td
+        (:todo id)]
+       [:td
+        [delete-button]]])]])
 
-(defn add-todo [text]
-  (let [id (swap! counter inc)]
-    (swap! todos assoc id {:id id
-                           :title text
-                           :done false})))
+(defn todo-input []
+  (let [input (reagent/atom "")]
+    (fn []
+      [:div
+       [:input {:type "text"
+                :placeholder "add todos"
+                :on-change #(reset! input (-> % .-target .-value))
+                }]
+       " "
+       [:input {:type "button"
+                :value "add"
+                :on-click #(swap! todos conj (add-in-todo @input))}]
+       ])
+    ))
+
 
 (defn todo-app []
-  (let [fltr (reagent/atom :all)]
-    (fn []
-      (let [default-string ""
-            title (reagent/atom default-string)
-            total-item (vals @todos)
-            completed (->> total-item (filter :done) count)
-            active (- (count total-item) completed)]
-        [:div
-         [header]
-         [todo-input]
-         ]))))
+  [:div
+   [:div
+    [header]]
+   [:div
+    [todo-input]]
+   [:div
+    [todos-list]]])
 
 (defn init []
   (reagent/render [todo-app] (.getElementById js/document "my-app-area")))
