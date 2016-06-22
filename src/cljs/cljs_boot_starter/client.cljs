@@ -94,7 +94,7 @@
     [todo-input]]
    [:div
     [todos-list]]
-   [:div
+   [:div [:BR]
     [footer]]])
 
 (defn init []
