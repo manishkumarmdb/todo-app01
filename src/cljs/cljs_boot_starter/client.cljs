@@ -5,53 +5,17 @@
 
 (enable-console-print!)
 
-(enable-console-print!)
-
-(defn header []
-  [:div.page-header
-   [:h3 "ToDo Application"]])
-
 (def todos (reagent/atom []))
-
-(def input-id (reagent/atom 1))
 
 (def counter (reagent/atom 0))
 
-(def todo-temp (reagent/atom ""))
+(def todo-temp (reagent/atom nil))
 
 (defn add-in-todo [text]
   (let [id (swap! counter inc)]
-    (sorted-map :id id
-                :todo text
-                :status true)))
-
-(defn checkbox []
-  [:div
-   [:input {:type "checkbox"
-            ;;:checked true
-            }]
-   " "
-   ])
-
-(defn delete-button []
-  [:div
-   [:input {:type "button"
-            :value "remove"
-            ;;:on-click #(remove key map....)
-            }]])
-
-(defn todos-list []
-  [:div
-   [:table
-    (for [id @todos]
-      ^{:key id}
-      [:tr
-       [:td
-        [checkbox]]
-       [:td
-        (:todo id)]
-       [:td
-        [delete-button]]])]])
+    (swap! todos conj (sorted-map :id id
+                                  :todo text
+                                  :status true))))
 
 (defn todo-input []
   (let [input (reagent/atom "")]
@@ -64,9 +28,44 @@
        " "
        [:input {:type "button"
                 :value "add"
-                :on-click #(swap! todos conj (add-in-todo @input))}]
-       ])
-    ))
+                :on-click #(reset! todo-temp (add-in-todo @input))}]
+       ])))
+
+;; find index of (sorted-map) in @todos(vector) using (sorted-map) :id
+(defn find-index [id]
+  (.indexOf @todos (into {} (filter #(= id (% :id)) @todos))))
+
+;; delete element in @todos (vector)
+(defn todo-delete-from-todos [index]
+  (vec (concat (vec (take (dec index) @todos)) (vec (drop index @todos)))))
+
+;; another way to remove element in @todos using filterv
+(defn todo-delete [temp-arg id]
+  (filterv #(not= id (% :id)) @temp-arg))
+
+(defn update-todos []
+  )
+
+(defn todos-show [temp-arg]
+  [:div
+   [:table
+    (for [text @temp-arg]
+      ^{:key text}
+      [:tr
+       [:td
+        [:input {:type "checkbox"
+                 :id (:id temp-arg)
+                 ;;:checked true
+                 ;;:checked false
+                 :on-click #()
+                 }]]
+       [:td
+        (:todo text)]
+       [:td
+        [:input {:type "button"
+                 :value "X"
+                 :on-click #(reset! todo-temp (todo-delete todo-temp (:id text)))
+                 }]]])]])
 
 (defn footer []
   (let []
@@ -86,16 +85,22 @@
                  :value "clear-completed"}]] " "]
       )))
 
+(defn header []
+  [:div.page-header
+   [:h3 "todo application"]])
+
 (defn todo-app []
-  [:div
-   [:div
-    [header]]
-   [:div
-    [todo-input]]
-   [:div
-    [todos-list]]
-   [:div [:BR]
-    [footer]]])
+  (let [input (reagent/atom "")]
+    (fn []
+      [:div
+       [:div
+        [header]]
+       [:div
+        [todo-input input]]
+       [:div
+        [todos-show todo-temp]]
+       [:div [:BR]
+        [footer]]])))
 
 (defn init []
   (reagent/render [todo-app] (.getElementById js/document "my-app-area")))
