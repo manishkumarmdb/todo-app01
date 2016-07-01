@@ -43,9 +43,7 @@
 (defn todo-delete [temp-arg id]
   (filterv #(not= id (% :id)) @temp-arg))
 
-(defn update-todos []
-  )
-
+;; show todos
 (defn todos-show [temp-arg]
   [:div
    [:table
@@ -68,39 +66,51 @@
                  }]]])]])
 
 ;; count all todos
-(defn all-todos []
+(defn count-all-todos []
   (count @todos))
 
 ;; count active todos
-(defn active-todos []
+(defn count-active-todos []
   (count (filterv #(= true (:active %)) @todos)))
 
+;; show active todos
+(defn show-active-todos []
+  (filterv #(= true (:active %)) @todos))
+
 ;; count complete todos
-(defn completed-todos []
+(defn count-completed-todos []
   (count (filterv #(= false (:active %)) @todos)))
 
+;; show completed todos
+(defn show-completed-todos []
+  (filterv #(= false (:active %)) @todos))
+
 ;; clear completed todos
-(defn clear-completed-todos []
-  )
+(defn delete-all-completed-todos []
+  (filterv #(= false (:active %)) @todos))
 
 (defn footer []
-  (let [allt (all-todos)
-        actt (active-todos)
-        comt (completed-todos)]
+  (let [allt (count-all-todos)
+        actt (count-active-todos)
+        comt (count-completed-todos)]
     (fn []
       [:div
        [:span
         [:input {:type "button"
-                 :value "all"}]] " "
+                 :value (str "all : " allt)
+                 :on-click #(todos-show @todos)}]] " "
        [:span
         [:input {:type "button"
-                 :value "active"}]] " "
+                 :value (str "active : " actt)
+                 :on-click #(show-active-todos)}]] " "
        [:span
         [:input {:type "button"
-                 :value "completed"}]] " "
+                 :value (str "completed : " comt)
+                 :on-click #(show-completed-todos)}]] " "
        [:span
         [:input {:type "button"
-                 :value "clear-completed"}]] " "]
+                 :value "clear-completed"
+                 :on-click #(delete-all-completed-todos)}]] " "]
       )))
 
 (defn header []
