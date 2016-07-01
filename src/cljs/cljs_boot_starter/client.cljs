@@ -15,21 +15,8 @@
   (let [id (swap! counter inc)]
     (swap! todos conj (sorted-map :id id
                                   :todo text
-                                  :status true))))
+                                  :active true))))
 
-(defn todo-input []
-  (let [input (reagent/atom "")]
-    (fn []
-      [:div
-       [:input {:type "text"
-                :placeholder "add todos"
-                :on-change #(reset! input (-> % .-target .-value))
-                }]
-       " "
-       [:input {:type "button"
-                :value "add"
-                :on-click #(reset! todo-temp (add-in-todo @input))}]
-       ])))
 
 ;; find index of (sorted-map) in @todos(vector) using (sorted-map) :id
 (defn find-index [id]
@@ -43,10 +30,74 @@
 (defn todo-delete [temp-arg id]
   (filterv #(not= id (% :id)) @temp-arg))
 
-;; show todos
+
+;; update :active key by id
+(defn todo-checked [id val]
+  (swap! @todos (update-in @todos [(find-index id) :active] val)))
+
+;;
+(defn todo-active [temp-arg]
+  (fn []
+    (- (count temp-arg) (->> temp-arg
+                             (filter :active)
+                             count))))
+
+;; update todo status(:active)
+(defn change-status [id val]
+  (swap! @todos (update-in @todos [(find-index id) :active] val)))
+
+;; count all todos......
+(defn count-all-todos []
+  (count @todos))
+
+;; count active todos
+(defn count-active-todos []
+  (count (filterv #(= true (:active %)) @todos)))
+
+;; show active todos
+(defn show-active-todos [temp-arg]
+  (filterv #(= true (:active %)) @temp-arg))
+
+;; count complete todos
+(defn count-completed-todos []
+  (count (filterv #(= false (:active %)) @todos)))
+
+;; show completed todos
+(defn show-completed-todos [temp-arg]
+  (filterv #(= false (:active %)) @temp-arg))
+
+;; clear completed todos
+(defn delete-all-completed-todos [temp-arg]
+  (filterv #(= false (:active %)) @temp-arg))
+
+
+(defn header []
+  [:div.page-header
+   [:h3 "todo application"]])
+
+;;
+(defn todo-input [text]
+  (let [input (reagent/atom text)]
+    (fn []
+      [:div
+       [:input {:type "text"
+                :placeholder "add todos"
+                :on-change #(reset! input (-> % .-target .-value))
+                }]
+       " "
+       [:input {:type "button"
+                :value "add"
+                :on-click #(reset! todo-temp (add-in-todo @input))}]
+       ])))
+
+
+;; show todos................
 (defn todos-show [temp-arg]
   [:div
    [:table
+    [:thead
+     ;;[:tr [:td "active"] [:td "todos"] [:td "action"]]
+     ]
     (for [text @temp-arg]
       ^{:key text}
       [:tr
@@ -55,7 +106,8 @@
                  :id (:id temp-arg)
                  ;;:checked true
                  ;;:checked false
-                 :on-click #()
+                 :checked (zero? todo-active)
+                 :on-change #(reset! @todos (todo-checked (:id temp-arg) (pos? todo-active)))
                  }]]
        [:td
         (:todo text)]
@@ -65,57 +117,31 @@
                  :on-click #(reset! todo-temp (todo-delete todo-temp (:id text)))
                  }]]])]])
 
-;; count all todos
-(defn count-all-todos []
-  (count @todos))
 
-;; count active todos
-(defn count-active-todos []
-  (count (filterv #(= true (:active %)) @todos)))
-
-;; show active todos
-(defn show-active-todos []
-  (filterv #(= true (:active %)) @todos))
-
-;; count complete todos
-(defn count-completed-todos []
-  (count (filterv #(= false (:active %)) @todos)))
-
-;; show completed todos
-(defn show-completed-todos []
-  (filterv #(= false (:active %)) @todos))
-
-;; clear completed todos
-(defn delete-all-completed-todos []
-  (filterv #(= false (:active %)) @todos))
-
-(defn footer []
-  (let [allt (count-all-todos)
-        actt (count-active-todos)
-        comt (count-completed-todos)]
+;; footer part.........
+(defn footer [temp-arg]
+  (let []
     (fn []
       [:div
        [:span
         [:input {:type "button"
-                 :value (str "all : " allt)
-                 :on-click #(todos-show @todos)}]] " "
+                 :value "all"
+                 :on-click #(reset! temp-arg (todos-show @todos))}]] " "
        [:span
         [:input {:type "button"
-                 :value (str "active : " actt)
-                 :on-click #(show-active-todos)}]] " "
+                 :value "active"
+                 :on-click #(reset! temp-arg (show-active-todos @todos))}]] " "
        [:span
         [:input {:type "button"
-                 :value (str "completed : " comt)
-                 :on-click #(show-completed-todos)}]] " "
+                 :value "completed"
+                 :on-click #(reset! temp-arg (show-completed-todos @todos))}]] " "
        [:span
         [:input {:type "button"
                  :value "clear-completed"
-                 :on-click #(delete-all-completed-todos)}]] " "]
+                 :on-click #(reset! temp-arg (delete-all-completed-todos @todos))}]] " "]
       )))
 
-(defn header []
-  [:div.page-header
-   [:h3 "todo application"]])
+;; main..........
 
 (defn todo-app []
   (let [input (reagent/atom "")]
@@ -126,9 +152,9 @@
        [:div
         [todo-input input]]
        [:div
-        [todos-show todo-temp]]
-       [:div [:BR]
-        [footer]]])))
+        [todos-show todo-temp]
+        [:div [:BR]
+         [footer todo-temp]]]])))
 
 (defn init []
   (reagent/render [todo-app] (.getElementById js/document "my-app-area")))
