@@ -67,8 +67,26 @@
                  :on-click #(reset! todo-temp (todo-delete todo-temp (:id text)))
                  }]]])]])
 
+;; count all todos
+(defn all-todos []
+  (count @todos))
+
+;; count active todos
+(defn active-todos []
+  (count (filterv #(= true (:active %)) @todos)))
+
+;; count complete todos
+(defn completed-todos []
+  (count (filterv #(= false (:active %)) @todos)))
+
+;; clear completed todos
+(defn clear-completed-todos []
+  )
+
 (defn footer []
-  (let []
+  (let [allt (all-todos)
+        actt (active-todos)
+        comt (completed-todos)]
     (fn []
       [:div
        [:span
